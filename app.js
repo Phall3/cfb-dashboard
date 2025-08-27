@@ -8,7 +8,18 @@
   // ---------- Config ----------
   const APP_CONFIG = JSON.parse(document.getElementById("app-config").textContent);
   const API_BASE = "https://api.collegefootballdata.com";
-  const API_KEY = APP_CONFIG?.data?.apiKey || "";
+  let API_KEY = "";
+
+  async function loadApiKey() {
+    try {
+      const res = await fetch("/api-key");
+      if (!res.ok) throw new Error("Failed to load API key");
+      const data = await res.json();
+      API_KEY = data.key || "";
+    } catch (err) {
+      console.error("Unable to retrieve API key", err);
+    }
+  }
   const POWER_CONFS = APP_CONFIG?.conferences || ["ACC", "Big Ten", "Big 12", "SEC", "Pac-12"];
 
   // ---------- DOM helpers ----------
@@ -198,7 +209,17 @@
     const url = `${API_BASE}${path}${Object.keys(params).length ? "?" + qsBuild(params) : ""}`;
     const cacheKey = `CFBD:${url}`;
     const cached = STATE.cache[cacheKey];
-    if (useCache && cached) return cached;
+    const ttlHours = APP_CONFIG?.data?.cache?.ttlHours;
+    const ttlMs = ttlHours > 0 ? ttlHours * 60 * 60 * 1000 : null;
+    const now = Date.now();
+    if (useCache && cached) {
+      const { data, ts } = cached;
+      if (!ttlMs || (ts && now - ts < ttlMs)) {
+        return data;
+      }
+      delete STATE.cache[cacheKey];
+      saveLS(SKEY.cache, STATE.cache);
+    }
 
     const headers = {
       "Content-Type": "application/json",
@@ -222,7 +243,7 @@
     return withThrottle(async () => {
       const data = await attempt(1);
       // cache
-      STATE.cache[cacheKey] = data;
+      STATE.cache[cacheKey] = { ts: Date.now(), data };
       saveLS(SKEY.cache, STATE.cache);
       return data;
     });
@@ -233,6 +254,7 @@
     try {
       setStatus(true);
       wireEvents();
+      await loadApiKey();
       await populateSeasons();
       await determineCurrentWeek();
       await populateConferences();
