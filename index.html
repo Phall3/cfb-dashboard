@@ -2,982 +2,394 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <title>Peezy’s Ball Numbers</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>College Football — Real‑Time Player Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <meta name="theme-color" content="#0F172A" />
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <style>
-    :root {
-      --bg: #0b1020;
-      --bg-soft: #0e1530;
-      --card: #121a3b;
-      --card-2: #151e46;
-      --muted: #8ea3c8;
-      --text: #ecf3ff;
-      --accent: #6aa3ff;
-      --accent-2: #37d1a7;
-      --warning: #ffd166;
-      --danger: #ff6b6b;
-      --ok: #70e000;
-      --border: rgba(255,255,255,0.08);
-      --shadow: 0 10px 25px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
-      --radius: 16px;
-    }
-    .light {
-      --bg: #f6f8ff;
-      --bg-soft: #eef3ff;
-      --card: #ffffff;
-      --card-2: #ffffff;
-      --muted: #54637e;
-      --text: #0e152e;
-      --accent: #3a79ff;
-      --accent-2: #0fb286;
-      --warning: #c07a00;
-      --danger: #d62828;
-      --ok: #2a9d8f;
-      --border: rgba(0,0,0,0.08);
-      --shadow: 0 10px 25px rgba(0,0,0,0.08);
-    }
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
-      margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      background: radial-gradient(1200px 800px at 20% -10%, #1e2a66 0%, transparent 60%),
-                  radial-gradient(1000px 700px at 110% 10%, #122351 0%, transparent 55%),
-                  var(--bg);
-      color: var(--text);
-      letter-spacing: 0.2px; overflow-y: overlay;
-    }
-    /* Layout */
-    .app {
-      display: grid; grid-template-columns: 280px 1fr; gap: 18px; 
-      grid-template-rows: auto 1fr; grid-template-areas:
-        "header header"
-        "sidebar main";
-      padding: 18px; max-width: 1600px; margin: 0 auto;
-    }
-    header {
-      grid-area: header; background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent), var(--card);
-      border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);
-      padding: 14px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-    }
-    header .title { font-weight: 800; font-size: 18px; letter-spacing: 0.3px; }
-    header .spacer { flex: 1; }
-    .badge { padding: 6px 10px; border: 1px solid var(--border); background: var(--card-2); border-radius: 999px; font-size: 12px; color: var(--muted); }
-    .btn { appearance: none; border: 1px solid var(--border); background: var(--card-2); color: var(--text); padding: 10px 12px; border-radius: 12px; cursor: pointer; box-shadow: var(--shadow); font-weight: 600; }
-    .btn:active { transform: translateY(1px); }
-    .btn.small { padding: 8px 10px; font-size: 12px; }
-    .btn.ghost { background: transparent; }
-    .btn.primary { background: linear-gradient(180deg, rgba(255,255,255,0.12), transparent), var(--accent); color: #fff; border-color: transparent; }
-    .btn.success { background: linear-gradient(180deg, rgba(255,255,255,0.12), transparent), var(--accent-2); color: #012; border-color: transparent; }
-    .btn.danger { background: var(--danger); color: #fff; border-color: transparent; }
-    .toggle { position: relative; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
-    .switch { width: 46px; height: 26px; background: var(--card-2); border: 1px solid var(--border); border-radius: 999px; position: relative; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03); }
-    .knob { width: 22px; height: 22px; background: #fff; border-radius: 50%; position: absolute; top: 1px; left: 1px; transition: transform .2s ease; }
-    .switch.on .knob { transform: translateX(20px); }
-    .sidebar { grid-area: sidebar; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; overflow: auto; max-height: calc(100vh - 90px); }
-    .sidebar h3 { margin: 4px 0 8px; font-size: 13px; color: var(--muted); font-weight: 700; letter-spacing: .6px; text-transform: uppercase; }
-    .group { display: grid; gap: 8px; margin-bottom: 14px; }
-    .input, select, .multiselect { width: 100%; background: var(--card-2); border: 1px solid var(--border); border-radius: 12px; color: var(--text); padding: 10px 12px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03); }
-    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-    .chip { background: var(--bg-soft); border: 1px solid var(--border); color: var(--muted); padding: 6px 8px; border-radius: 999px; font-size: 12px; display: inline-flex; gap: 8px; align-items: center; }
-    .chip button { border: none; background: transparent; color: inherit; cursor: pointer; }
-    main { grid-area: main; display: grid; grid-template-rows: auto auto 1fr; gap: 18px; }
-    .kpis { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; }
-    .kpi { display: grid; gap: 8px; }
-    .kpi .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
-    .kpi .value { font-size: 26px; font-weight: 800; letter-spacing: .4px; }
-    .kpi .delta { font-size: 12px; color: var(--accent-2); }
-    .charts { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
-    .chart-card { position: relative; }
-    .chart-toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-    .chart-toolbar .title { font-weight: 700; }
-    .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
-    .table-toolbar { display:flex; flex-wrap: wrap; gap: 8px; align-items:center; padding:12px; }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    thead th { position: sticky; top: 0; background: linear-gradient(180deg, rgba(255,255,255,0.06), transparent), var(--card-2); color: var(--muted); font-weight: 700; letter-spacing: .5px; text-transform: uppercase; font-size: 11px; border-bottom: 1px solid var(--border); padding: 10px; text-align: left; }
-    tbody td { border-top: 1px solid var(--border); padding: 10px; }
-    tbody tr:hover { background: rgba(255,255,255,0.03); }
-    .star { cursor: pointer; filter: drop-shadow(0 0 2px rgba(0,0,0,0.4)); }
-    .spark { width: 100px; height: 28px; display:inline-block; }
-    .pagination { display:flex; gap: 6px; align-items:center; justify-content: space-between; padding: 12px; color: var(--muted); }
-    .pill { padding: 6px 10px; border-radius: 999px; background: var(--bg-soft); border: 1px solid var(--border); }
-    .watchlist { display: grid; gap: 10px; grid-template-columns: repeat(4, minmax(0,1fr)); }
-    .watch-item { display:grid; gap:6px; padding: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; }
-    .watch-item .name { font-weight: 700; }
-    .muted { color: var(--muted); }
-    .hidden { display:none !important; }
-    .row { display:flex; gap:8px; align-items:center; }
-    .right { margin-left:auto; }
-    .grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
-    @media (max-width: 1200px){
-      .app { grid-template-columns: 1fr; grid-template-areas: "header" "main"; }
-      .sidebar { display: none; }
-      .charts { grid-template-columns: 1fr; }
-      .kpis { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Charts (Chart.js) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- App Config (embedded key as requested) -->
+  <script id="app-config" type="application/json">
+  {
+    "appName": "Peezy’s Ball Numbers",
+    "theme": {
+      "mode": "dark",
+      "primary": "#0F172A",
+      "accent": "#FFFFFF"
+    },
+    "season": {
+      "default": "currentWeek",
+      "includePostseason": false
+    },
+    "conferences": ["ACC", "Big Ten", "Big 12", "SEC", "Pac-12"],
+    "positions": ["QB", "RB", "WR", "TE"],
+    "features": {
+      "search": true,
+      "filters": ["position", "conference", "team", "week", "season"],
+      "favorites": true,
+      "comparePlayersMax": 3,
+      "refreshButton": true,
+      "exportCSV": true,
+      "teamDashboards": true
+    },
+    "data": {
+      "provider": "CollegeFootballData",
+      "apiKey": "T6BWlbT1I2tC1SXw26d9Xo+DnuxFwpIFZOz1Nb6Yla/6nvP17yyk/gYaRmtxE/Sc",
+      "endpoints": {
+        "playersGames": "/games/players",
+        "teams": "/teams",
+        "matchup": "/teams/matchup",
+        "lines": "/games/lines",
+        "ratingsSP": "/ratings/sp",
+        "depthCharts": "/roster"
+      },
+      "cache": { "enabled": true, "ttlHours": 24, "lazyLoadBy": ["position","week"], "maxParallel": 4 }
+    },
+    "scoring": {
+      "mode": "custom",
+      "custom": {
+        "passYard": 0.04,
+        "passTd": 4,
+        "interception": -2,
+        "rushYard": 0.1,
+        "rushTd": 6,
+        "recYard": 0.1,
+        "recTd": 6,
+        "reception": 1,
+        "twoPt": 2,
+        "fumble": -2,
+        "bonuses": [
+          { "stat": "passYards", "threshold": 300, "points": 3 },
+          { "stat": "rushYards", "threshold": 100, "points": 3 },
+          { "stat": "recYards", "threshold": 100, "points": 3 }
+        ]
+      }
+    },
+    "boomModel": {
+      "enabled": true,
+      "recentGames": 3,
+      "weights": { "recentForm": 0.5, "opponentDefense": 0.3, "homeAway": 0.1, "usage": 0.1 },
+      "homeFieldAdvantagePoints": 0.5,
+      "paceAdjustment": true,
+      "outputCount": 20
     }
-    ::-webkit-scrollbar { height: 12px; width: 12px; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
-  </style>
+  }
+  </script>
 </head>
+
 <body>
-  <div class="app" id="app">
-    <header>
-      <div class="title">🏈 College Football — Real‑Time Player Dashboard</div>
-      <span class="badge" id="statusBadge">Demo Data • Updates every 2s</span>
-      <span class="badge" id="lastUpdated">Last update: —</span>
-      <div class="spacer"></div>
-      <input id="quickSearch" class="input" placeholder="Quick search player/team…" style="min-width: 260px" />
-      <label class="toggle" title="Toggle live updates">
-        <span class="muted">Live</span>
-        <div id="liveSwitch" class="switch on"><div class="knob"></div></div>
-      </label>
-      <label class="toggle" title="Toggle light/dark theme">
-        <span class="muted">Theme</span>
-        <div id="themeSwitch" class="switch"><div class="knob"></div></div>
-      </label>
-      <button class="btn small" id="btnConnect">Connect API/WebSocket</button>
-      <button class="btn small" id="btnImport">Import JSON</button>
-      <input type="file" id="fileInput" accept=".json" class="hidden" />
-    </header>
+  <noscript>
+    <div class="noscript">This app needs JavaScript enabled.</div>
+  </noscript>
 
-    <!-- Sidebar / Filters -->
-    <aside class="sidebar" id="sidebar">
-      <div class="group">
-        <h3>Season</h3>
-        <select id="seasonSelect" class="input"></select>
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="dot"></div>
+      <h1 class="title">Peezy’s Ball Numbers</h1>
+    </div>
+
+    <div class="controls">
+      <div class="control">
+        <label for="seasonSelect">Season</label>
+        <select id="seasonSelect" aria-label="Season"></select>
       </div>
-      <div class="group">
-        <h3>Week Range</h3>
-        <div class="row">
-          <input type="range" min="1" max="14" value="1" id="weekStart" class="input" />
-          <input type="range" min="1" max="14" value="14" id="weekEnd" class="input" />
+      <div class="control">
+        <label for="weekSelect">Week</label>
+        <select id="weekSelect" aria-label="Week"></select>
+      </div>
+      <div class="control">
+        <label for="confSelect">Conference</label>
+        <select id="confSelect" aria-label="Conference"></select>
+      </div>
+      <div class="control">
+        <label for="teamSelect">Team</label>
+        <select id="teamSelect" aria-label="Team"></select>
+      </div>
+      <div class="control">
+        <label for="posSelect">Position</label>
+        <select id="posSelect" aria-label="Position">
+          <option value="">All</option>
+          <option>QB</option><option>RB</option><option>WR</option><option>TE</option>
+        </select>
+      </div>
+      <div class="control search">
+        <input id="searchInput" type="search" placeholder="Search players…" aria-label="Search players">
+      </div>
+
+      <div class="actions">
+        <button id="refreshBtn" class="btn primary" title="Fetch latest data">Refresh</button>
+        <button id="exportBtn" class="btn" title="Export current table to CSV">Export CSV</button>
+        <button id="scoringBtn" class="btn" title="Edit fantasy scoring">Scoring</button>
+        <button id="favoritesBtn" class="btn" title="Show favorites">★</button>
+        <button id="compareBtn" class="btn" title="Compare players"><span id="compareCount">0</span>/3 Compare</button>
+      </div>
+    </div>
+
+    <div class="status">
+      <span id="apiStatus" class="badge">API: —</span>
+      <span id="lastUpdated" class="muted">Last updated —</span>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <nav class="tabs" role="tablist" aria-label="Dashboard Views">
+    <button class="tab active" role="tab" aria-selected="true" aria-controls="playersView" id="tabPlayers">Players</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="teamsView" id="tabTeams">Teams</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="boomView" id="tabBoom">Likely to Go Off</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="compareView" id="tabCompare">Compare</button>
+  </nav>
+
+  <main class="main">
+    <!-- PLAYERS PANEL -->
+    <section id="playersView" role="tabpanel" aria-labelledby="tabPlayers" class="panel active">
+      <div class="grid two">
+        <div class="card">
+          <div class="card-header">
+            <h2>Players — Power 5</h2>
+            <div class="subactions">
+              <span id="rowCount" class="muted">0 players</span>
+              <button id="clearFiltersBtn" class="btn subtle">Clear filters</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table id="playersTable" class="data">
+              <thead>
+                <tr>
+                  <th data-sort="name">Player</th>
+                  <th data-sort="team">Team</th>
+                  <th data-sort="pos">Pos</th>
+                  <th data-sort="opp">Opp</th>
+                  <th data-sort="home">H/A</th>
+                  <th data-sort="usage">Usage%</th>
+                  <th data-sort="avg">Avg Pts</th>
+                  <th data-sort="proj">Proj</th>
+                  <th data-sort="boom">Boom%</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="playersTbody">
+                <!-- Rows injected by app.js -->
+              </tbody>
+            </table>
+            <div id="playersEmpty" class="empty hidden">No players match your filters.</div>
+            <div id="playersLoading" class="loading">
+              <div class="spinner"></div>
+              <span>Loading players…</span>
+            </div>
+          </div>
+          <div class="pagination">
+            <button id="prevPage" class="btn subtle">Prev</button>
+            <span id="pageInfo" class="muted">Page 1</span>
+            <button id="nextPage" class="btn subtle">Next</button>
+          </div>
         </div>
-        <div class="row muted"><span>From: <b id="weekStartLabel">1</b></span><span class="right">To: <b id="weekEndLabel">14</b></span></div>
-      </div>
-      <div class="group">
-        <h3>Conference</h3>
-        <div id="confChips" class="chips"></div>
-        <select id="confSelect" class="input" multiple size="6"></select>
-      </div>
-      <div class="group">
-        <h3>Team</h3>
-        <select id="teamSelect" class="input" multiple size="8"></select>
-      </div>
-      <div class="group">
-        <h3>Position</h3>
-        <div class="chips" id="posChips"></div>
-      </div>
-      <div class="group">
-        <h3>Metric</h3>
-        <select id="metricSelect" class="input"></select>
-      </div>
-      <div class="group grid-2">
-        <button id="btnReset" class="btn ghost">Reset Filters</button>
-        <button id="btnSaveView" class="btn">Save View</button>
-      </div>
-      <div class="group">
-        <h3>Visible Charts</h3>
-        <label class="row"><input type="checkbox" id="showTrend" checked> <span>Weekly Trend</span></label>
-        <label class="row"><input type="checkbox" id="showLeaders" checked> <span>Top Leaders</span></label>
-        <label class="row"><input type="checkbox" id="showDist" checked> <span>Distribution</span></label>
-        <label class="row"><input type="checkbox" id="showRadar" checked> <span>Player Radar</span></label>
-      </div>
-      <div class="group">
-        <h3>Table Columns</h3>
-        <div id="columnToggles" class="chips"></div>
-      </div>
-      <div class="muted" style="font-size:12px;line-height:1.5;margin-top:8px">Tip: Use <b>Quick search</b> above for fast filtering. Saved views persist in your browser.</div>
-    </aside>
 
-    <main>
-      <!-- KPI Cards -->
-      <section class="kpis" id="kpis">
-        <div class="card kpi"><div class="label">Passing Yards (YTD, Avg Top‑25)</div><div class="value" id="kpiPassYds">—</div><div class="delta" id="kpiPassDelta">—</div></div>
-        <div class="card kpi"><div class="label">Rushing Yards (YTD, Avg Top‑25)</div><div class="value" id="kpiRushYds">—</div><div class="delta" id="kpiRushDelta">—</div></div>
-        <div class="card kpi"><div class="label">Receiving Yards (YTD, Avg Top‑25)</div><div class="value" id="kpiRecYds">—</div><div class="delta" id="kpiRecDelta">—</div></div>
-        <div class="card kpi"><div class="label">Total TDs (YTD, Avg Top‑25)</div><div class="value" id="kpiTds">—</div><div class="delta" id="kpiTdsDelta">—</div></div>
-      </section>
+        <div class="card">
+          <div class="card-header"><h2>Player Trends</h2></div>
+          <div class="charts">
+            <canvas id="chartGameByGame" height="160"></canvas>
+          </div>
+          <div class="charts">
+            <canvas id="chartRollingAvg" height="160"></canvas>
+          </div>
+          <div class="charts">
+            <canvas id="chartUsageShare" height="160"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
 
-      <!-- Charts -->
-      <section class="charts" id="charts">
-        <div id="chartTrendCard" class="card chart-card">
-          <div class="chart-toolbar">
-            <div class="title">Weekly Trend</div>
-            <div class="spacer"></div>
-            <select id="trendAgg" class="input" style="width:140px">
-              <option value="avg">Average</option>
-              <option value="sum">Sum</option>
-              <option value="median">Median</option>
+    <!-- TEAMS PANEL -->
+    <section id="teamsView" role="tabpanel" aria-labelledby="tabTeams" class="panel">
+      <div class="grid two">
+        <div class="card">
+          <div class="card-header"><h2>Team Pace & Efficiency</h2></div>
+          <div class="charts">
+            <canvas id="chartTeamPace" height="180"></canvas>
+          </div>
+          <div class="charts">
+            <canvas id="chartTeamEPA" height="180"></canvas>
+          </div>
+          <div class="charts">
+            <canvas id="chartRedZone" height="180"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2>Upcoming Matchup</h2></div>
+          <div class="matchup">
+            <div id="matchupSummary" class="muted">Select a team to view matchup.</div>
+            <div class="charts">
+              <canvas id="chartPaceVsOpp" height="200"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BOOM PANEL -->
+    <section id="boomView" role="tabpanel" aria-labelledby="tabBoom" class="panel">
+      <div class="card">
+        <div class="card-header">
+          <h2>Likely to Go Off</h2>
+          <div class="subactions">
+            <label class="inline">Show
+              <select id="boomCount">
+                <option>10</option><option selected>20</option><option>30</option><option>50</option>
+              </select>
+            </label>
+            <button id="recalcBoom" class="btn">Recalculate</button>
+          </div>
+        </div>
+        <ol id="boomList" class="boom-list">
+          <!-- Items injected by app.js -->
+        </ol>
+        <div id="boomLoading" class="loading">
+          <div class="spinner"></div><span>Scoring & weights applied…</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h2>Model Weights</h2></div>
+        <form id="weightsForm" class="weights">
+          <label>Recent Form <input type="range" id="wRecent" min="0" max="1" step="0.05" value="0.5" /></label>
+          <label>Opponent Defense <input type="range" id="wDefense" min="0" max="1" step="0.05" value="0.3" /></label>
+          <label>Home/Away <input type="range" id="wHome" min="0" max="1" step="0.05" value="0.1" /></label>
+          <label>Usage <input type="range" id="wUsage" min="0" max="1" step="0.05" value="0.1" /></label>
+          <label>Recent Games <input type="number" id="recentGames" min="1" max="6" value="3" /></label>
+          <button type="button" id="saveWeights" class="btn primary">Save Weights</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- COMPARE PANEL -->
+    <section id="compareView" role="tabpanel" aria-labelledby="tabCompare" class="panel">
+      <div class="card">
+        <div class="card-header"><h2>Compare Players (up to 3)</h2></div>
+        <div id="compareSlots" class="compare-slots">
+          <!-- Player compare cards injected by app.js -->
+        </div>
+        <div class="charts">
+          <canvas id="chartComparePoints" height="220"></canvas>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FAVORITES DRAWER -->
+  <aside id="favoritesDrawer" class="drawer" aria-hidden="true" aria-label="Favorites">
+    <div class="drawer-header">
+      <h3>Favorites</h3>
+      <button id="closeFavorites" class="btn icon" aria-label="Close">✕</button>
+    </div>
+    <ul id="favoritesList" class="favorites-list">
+      <!-- Favorite players injected by app.js -->
+    </ul>
+  </aside>
+
+  <!-- SCORING MODAL -->
+  <div id="scoringModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="scoringTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="scoringTitle">Fantasy Scoring (Custom)</h3>
+        <button id="closeScoring" class="btn icon" aria-label="Close">✕</button>
+      </div>
+      <form id="scoringForm" class="form-grid">
+        <label>Pass Yard <input name="passYard" type="number" step="0.01" value="0.04"></label>
+        <label>Pass TD <input name="passTd" type="number" step="0.1" value="4"></label>
+        <label>Interception <input name="interception" type="number" step="0.1" value="-2"></label>
+        <label>Rush Yard <input name="rushYard" type="number" step="0.01" value="0.1"></label>
+        <label>Rush TD <input name="rushTd" type="number" step="0.1" value="6"></label>
+        <label>Rec Yard <input name="recYard" type="number" step="0.01" value="0.1"></label>
+        <label>Rec TD <input name="recTd" type="number" step="0.1" value="6"></label>
+        <label>Receptions (PPR) <input name="reception" type="number" step="0.1" value="1"></label>
+        <label>Two-Point Conv. <input name="twoPt" type="number" step="0.1" value="2"></label>
+        <label>Fumble <input name="fumble" type="number" step="0.1" value="-2"></label>
+
+        <fieldset class="bonuses">
+          <legend>Bonuses</legend>
+          <div class="bonus-row">
+            <select name="bonusStat1">
+              <option value="passYards" selected>Pass Yards</option>
+              <option value="rushYards">Rush Yards</option>
+              <option value="recYards">Rec Yards</option>
             </select>
-            <button class="btn small" data-dl="trend">Download PNG</button>
+            <input name="bonusThresh1" type="number" value="300" />
+            <input name="bonusPts1" type="number" step="0.1" value="3" />
           </div>
-          <canvas id="trendChart" height="150"></canvas>
-        </div>
-        <div id="chartLeadersCard" class="card chart-card">
-          <div class="chart-toolbar">
-            <div class="title">Top Leaders</div>
-            <div class="spacer"></div>
-            <select id="leadersCount" class="input" style="width:120px">
-              <option>5</option><option selected>10</option><option>15</option><option>25</option>
+          <div class="bonus-row">
+            <select name="bonusStat2">
+              <option value="passYards">Pass Yards</option>
+              <option value="rushYards" selected>Rush Yards</option>
+              <option value="recYards">Rec Yards</option>
             </select>
-            <button class="btn small" data-dl="leaders">Download PNG</button>
+            <input name="bonusThresh2" type="number" value="100" />
+            <input name="bonusPts2" type="number" step="0.1" value="3" />
           </div>
-          <canvas id="leadersChart" height="150"></canvas>
-        </div>
-        <div id="chartDistCard" class="card chart-card">
-          <div class="chart-toolbar">
-            <div class="title">Distribution (Histogram)</div>
-            <div class="spacer"></div>
-            <button class="btn small" data-dl="dist">Download PNG</button>
+          <div class="bonus-row">
+            <select name="bonusStat3">
+              <option value="passYards">Pass Yards</option>
+              <option value="rushYards">Rush Yards</option>
+              <option value="recYards" selected>Rec Yards</option>
+            </select>
+            <input name="bonusThresh3" type="number" value="100" />
+            <input name="bonusPts3" type="number" step="0.1" value="3" />
           </div>
-          <canvas id="distChart" height="150"></canvas>
-        </div>
-        <div id="chartRadarCard" class="card chart-card">
-          <div class="chart-toolbar">
-            <div class="title">Player Radar — <span id="radarPlayerName" class="muted">(select a row)</span></div>
-            <div class="spacer"></div>
-            <button class="btn small" data-dl="radar">Download PNG</button>
-          </div>
-          <canvas id="radarChart" height="150"></canvas>
-        </div>
-      </section>
+        </fieldset>
 
-      <!-- Table -->
-      <section class="table-wrap">
-        <div class="table-toolbar">
-          <div class="row" style="gap:6px">
-            <button class="btn small" id="btnExportCsv">Export Table CSV</button>
-            <button class="btn small" id="btnClearWatch">Clear Watchlist</button>
-            <span class="pill" id="rowCount">0 players</span>
-          </div>
-          <div class="spacer"></div>
-          <div class="row">
-            <label class="row muted" style="gap:6px"><input type="checkbox" id="onlyWatch"> <span>Only Watchlist</span></label>
-            <select id="rowsPerPage" class="input" style="width:120px"><option>25</option><option selected>50</option><option>100</option></select>
-          </div>
+        <div class="modal-footer">
+          <button type="button" id="resetScoring" class="btn subtle">Reset</button>
+          <button type="submit" class="btn primary">Save Scoring</button>
         </div>
-        <div style="overflow:auto; max-height: 60vh;">
-          <table id="playersTable">
-            <thead><tr id="tableHead"></tr></thead>
-            <tbody id="tableBody"></tbody>
-          </table>
-        </div>
-        <div class="pagination">
-          <div class="row" style="gap:8px">
-            <button class="btn small" id="prevPage">Prev</button>
-            <span id="pageInfo" class="muted">Page 1/1</span>
-            <button class="btn small" id="nextPage">Next</button>
-          </div>
-          <div class="row" style="gap:8px">
-            <span class="muted">Sort:</span>
-            <select id="sortSelect" class="input" style="width:180px"></select>
-            <select id="sortDir" class="input" style="width:120px"><option value="desc">Desc</option><option value="asc">Asc</option></select>
-          </div>
-        </div>
-      </section>
-
-      <!-- Watchlist -->
-      <section>
-        <div class="row" style="margin:8px 0 10px 4px"><div style="font-weight:800">Watchlist</div><span class="muted" style="margin-left:8px">(click ★ in table to add)</span></div>
-        <div class="watchlist" id="watchlist"></div>
-      </section>
-    </main>
+      </form>
+    </div>
   </div>
 
-  <!-- API / Socket Modal (lightweight) -->
-  <dialog id="apiModal" style="border:none;border-radius:14px;max-width:520px;width:92%;background:var(--card);color:var(--text);box-shadow:var(--shadow);">
-    <form method="dialog" style="margin:0;padding:16px;display:grid;gap:10px">
-      <div style="font-size:18px;font-weight:800">Connect API / WebSocket</div>
-      <div class="muted" style="font-size:13px">Optional: paste a WebSocket URL that streams player updates as JSON messages of the form <code>{type:"stat", playerId, metric, value, week, ts}</code>. Or choose a REST API that returns an array of players with stats. This file runs fully client‑side.</div>
-      <label>Socket URL<input id="socketUrl" class="input" placeholder="wss://example.com/cfb-live"/></label>
-      <label>Bearer Token (optional)<input id="socketToken" class="input" placeholder="sk_..."/></label>
-      <div class="grid-2">
-        <button class="btn ghost" value="cancel">Cancel</button>
-        <button id="btnSocketConnect" class="btn success" value="connect">Connect</button>
+  <!-- TEMPLATES -->
+  <template id="playerRowTpl">
+    <tr>
+      <td class="player">
+        <button class="fav-btn" title="Favorite">☆</button>
+        <span class="player-name"></span>
+      </td>
+      <td class="team"></td>
+      <td class="pos"></td>
+      <td class="opp"></td>
+      <td class="home"></td>
+      <td class="usage"></td>
+      <td class="avg"></td>
+      <td class="proj"></td>
+      <td class="boom"></td>
+      <td class="row-actions">
+        <button class="btn tiny add-compare">Add</button>
+        <button class="btn tiny trend">Trend</button>
+      </td>
+    </tr>
+  </template>
+
+  <template id="compareCardTpl">
+    <div class="compare-card">
+      <div class="compare-head">
+        <strong class="name">Player Name</strong>
+        <button class="btn icon remove" title="Remove">✕</button>
       </div>
-    </form>
-  </dialog>
+      <div class="meta"><span class="team">TEAM</span> • <span class="pos">POS</span></div>
+      <div class="mini">
+        <canvas class="miniChart" height="100"></canvas>
+      </div>
+    </div>
+  </template>
 
-  <script>
-  ;(() => {
-    // ======= Utilities =======
-    const $ = (q, el=document) => el.querySelector(q);
-    const $$ = (q, el=document) => Array.from(el.querySelectorAll(q));
-    const fmt = (n) => n == null || isNaN(n) ? '—' : n.toLocaleString();
-    const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
-    const sum = (arr) => arr.reduce((a,b)=>a+(+b||0),0);
-    const avg = (arr) => arr.length ? sum(arr)/arr.length : 0;
-    const median = (arr) => { if(!arr.length) return 0; const s=[...arr].sort((a,b)=>a-b); const m=Math.floor(s.length/2); return s.length%2?s[m]:(s[m-1]+s[m])/2; };
-    const by = (k, dir='desc') => (a,b) => (dir==='asc'? (a[k]??0)-(b[k]??0) : (b[k]??0)-(a[k]??0));
-    const uniq = (arr) => Array.from(new Set(arr));
-    const save = (k,v) => localStorage.setItem(k, JSON.stringify(v));
-    const load = (k,d=null) => { try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } };
-    const nowTs = () => new Date().toLocaleString();
-
-    // ======= Demo Data (synthetic but realistic structure) =======
-    const conferences = ["SEC","Big Ten","ACC","Big 12","Pac-12","AAC"];
-    const teamsByConf = {
-      "SEC":["Alabama","Georgia","LSU","Texas A&M"],
-      "Big Ten":["Ohio State","Michigan","Penn State","Iowa"],
-      "ACC":["Clemson","Florida State","North Carolina","Miami"],
-      "Big 12":["Texas","Oklahoma","Baylor","TCU"],
-      "Pac-12":["USC","Oregon","Washington","Utah"],
-      "AAC":["SMU","Tulane","Memphis","UTSA"]
-    };
-    const positions = ["QB","RB","WR","TE"]; // Simplified for the dashboard
-
-    // Make ~220 players with 14 weeks of stats
-    const rng = (seed => () => (seed = (seed * 9301 + 49297) % 233280) / 233280)(42);
-    function makePlayers() {
-      const players = []; let id=1;
-      for (const conf of conferences) {
-        for (const team of teamsByConf[conf]) {
-          // 2 QBs, 4 RBs, 6 WRs, 2 TEs per team
-          const roster = [
-            ...Array.from({length:2}, (_,i)=>({pos:"QB", base:[240, 2.1]})),
-            ...Array.from({length:4}, (_,i)=>({pos:"RB", base:[85, 0.8]})),
-            ...Array.from({length:6}, (_,i)=>({pos:"WR", base:[70, 0.6]})),
-            ...Array.from({length:2}, (_,i)=>({pos:"TE", base:[40, 0.4]})),
-          ];
-          roster.forEach((r, idx) => {
-            const name = generateName();
-            const statWeeks = {};
-            let totalTD=0, totalPass=0, totalRush=0, totalRec=0, totalPlays=0;
-            for (let w=1; w<=14; w++) {
-              const variance = (rng()*2-1);
-              const baseYds = r.pos==='QB' ? 220 + rng()*160 : r.pos==='RB' ? 60 + rng()*110 : r.pos==='WR' ? 50 + rng()*120 : 35 + rng()*70;
-              const yds = Math.max(0, baseYds * (0.7 + rng()*0.6));
-              const tds = Math.max(0, Math.round((r.pos==='QB' ? 1.7 : r.pos==='RB' ? 0.8 : r.pos==='WR' ? 0.7 : 0.4) * (0.6 + rng()*1.2)));
-              const pass = r.pos==='QB' ? yds * (0.85 + rng()*0.3) : 0;
-              const rush = r.pos==='RB' ? yds : r.pos==='QB' ? yds*0.15 : 0;
-              const rec  = r.pos==='WR' || r.pos==='TE' ? yds : r.pos==='RB' ? yds*0.2 : 0;
-              const plays = (r.pos==='QB'? 45 + rng()*25 : 15 + rng()*20);
-              statWeeks[w] = { week:w, passYds:Math.round(pass), rushYds:Math.round(rush), recYds:Math.round(rec), tds, plays:Math.round(plays) };
-              totalTD += tds; totalPass += pass; totalRush += rush; totalRec += rec; totalPlays += plays;
-            }
-            players.push({
-              id: id++, name, team, conference: conf, position: r.pos,
-              season: 2025, classYear: ["FR","SO","JR","SR"][Math.floor(rng()*4)],
-              statsByWeek: statWeeks,
-              totals() { const w=Object.values(this.statsByWeek); return {
-                passYds: Math.round(w.reduce((a,b)=>a+b.passYds,0)),
-                rushYds: Math.round(w.reduce((a,b)=>a+b.rushYds,0)),
-                recYds:  Math.round(w.reduce((a,b)=>a+b.recYds,0)),
-                tds:     Math.round(w.reduce((a,b)=>a+b.tds,0)),
-                plays:   Math.round(w.reduce((a,b)=>a+b.plays,0))
-              }}
-            });
-          });
-        }
-      }
-      return players;
-    }
-    function generateName(){
-      const first = ["Jayden","Malik","Caleb","Eli","Jaxson","Brayden","Micah","Noah","Roman","Tyler","Logan","Jalen","Drake","Aiden","Mason","Owen","Chase","Liam","Ryder","Cade"];
-      const last = ["Williams","Brown","Johnson","Davis","Miller","Wilson","Moore","Taylor","Anderson","Thomas","Jackson","White","Harris","Martin","Thompson","Garcia","Martinez","Robinson","Clark","Rodriguez"];
-      return first[Math.floor(rng()*first.length)] + ' ' + last[Math.floor(rng()*last.length)];
-    }
-
-    // ======= Global State =======
-    let players = makePlayers();
-    let selectedPlayerId = null;
-    const state = Object.assign({
-      theme: load('cfb.theme', 'dark'),
-      live: true,
-      season: 2025,
-      weekStart: 1,
-      weekEnd: 14,
-      confs: [],
-      teams: [],
-      positions: new Set(positions),
-      metric: 'passYds',
-      trendAgg: 'avg',
-      leadersCount: 10,
-      onlyWatch: false,
-      rowsPerPage: 50,
-      page: 1,
-      sortKey: 'metricYTD',
-      sortDir: 'desc',
-      visibleCharts: { trend:true, leaders:true, dist:true, radar:true },
-      columns: ['★','Player','Team','Conf','Pos','Pass Yds','Rush Yds','Rec Yds','TDs','Plays','Trend'],
-      watch: new Set(load('cfb.watch', [])),
-      views: load('cfb.views', [])
-    }, load('cfb.state', {}));
-
-    if(state.theme === 'light') document.body.classList.add('light');
-
-    // ======= DOM Refs =======
-    const liveSwitch = $('#liveSwitch');
-    const themeSwitch = $('#themeSwitch');
-    const statusBadge = $('#statusBadge');
-    const lastUpdated = $('#lastUpdated');
-    const quickSearch = $('#quickSearch');
-
-    // Sidebar controls
-    const seasonSelect = $('#seasonSelect');
-    const weekStart = $('#weekStart');
-    const weekEnd = $('#weekEnd');
-    const weekStartLabel = $('#weekStartLabel');
-    const weekEndLabel = $('#weekEndLabel');
-    const confSelect = $('#confSelect');
-    const confChips = $('#confChips');
-    const teamSelect = $('#teamSelect');
-    const posChips = $('#posChips');
-    const metricSelect = $('#metricSelect');
-    const btnReset = $('#btnReset');
-    const btnSaveView = $('#btnSaveView');
-    const columnToggles = $('#columnToggles');
-
-    // Charts visibility
-    const showTrend = $('#showTrend');
-    const showLeaders = $('#showLeaders');
-    const showDist = $('#showDist');
-    const showRadar = $('#showRadar');
-
-    // Charts & toolbars
-    const trendAgg = $('#trendAgg');
-    const leadersCount = $('#leadersCount');
-    const radarPlayerName = $('#radarPlayerName');
-
-    // Table controls
-    const rowCount = $('#rowCount');
-    const sortSelect = $('#sortSelect');
-    const sortDir = $('#sortDir');
-    const rowsPerPage = $('#rowsPerPage');
-    const onlyWatch = $('#onlyWatch');
-    const tableHead = $('#tableHead');
-    const tableBody = $('#tableBody');
-    const pageInfo = $('#pageInfo');
-    const prevPage = $('#prevPage');
-    const nextPage = $('#nextPage');
-
-    const kpiPassYds = $('#kpiPassYds');
-    const kpiRushYds = $('#kpiRushYds');
-    const kpiRecYds = $('#kpiRecYds');
-    const kpiTds = $('#kpiTds');
-    const kpiPassDelta = $('#kpiPassDelta');
-    const kpiRushDelta = $('#kpiRushDelta');
-    const kpiRecDelta = $('#kpiRecDelta');
-    const kpiTdsDelta = $('#kpiTdsDelta');
-
-    // Import & API
-    const btnImport = $('#btnImport');
-    const fileInput = $('#fileInput');
-    const btnConnect = $('#btnConnect');
-    const apiModal = $('#apiModal');
-    const socketUrl = $('#socketUrl');
-    const socketToken = $('#socketToken');
-    const btnSocketConnect = $('#btnSocketConnect');
-
-    // ======= Charts =======
-    let charts = { trend:null, leaders:null, dist:null, radar:null };
-
-    function buildCharts(){
-      const common = { responsive:true, maintainAspectRatio:false, plugins:{ legend:{labels:{ color:getComputedStyle(document.body).getPropertyValue('--text') }}, tooltip:{mode:'index', intersect:false} }, scales:{ x:{ ticks:{ color:getComputedStyle(document.body).getPropertyValue('--muted') } }, y:{ ticks:{ color:getComputedStyle(document.body).getPropertyValue('--muted') }, grid:{ color:'rgba(255,255,255,0.07)' } } } };
-
-      charts.trend = new Chart($('#trendChart'), { type:'line', data:{ labels:[], datasets:[] }, options: { ...common, elements:{ line:{ tension:0.35 } } } });
-      charts.leaders = new Chart($('#leadersChart'), { type:'bar', data:{ labels:[], datasets:[{label:'YTD', data:[]} ] }, options: { ...common, scales:{ x:{ ticks:{ color:getComputedStyle(document.body).getPropertyValue('--muted') } }, y:{ beginAtZero:true, ticks:{ color:getComputedStyle(document.body).getPropertyValue('--muted') } } } });
-      charts.dist = new Chart($('#distChart'), { type:'bar', data:{ labels:[], datasets:[{label:'Count', data:[]}] }, options: { ...common } });
-      charts.radar = new Chart($('#radarChart'), { type:'radar', data:{ labels:['Pass Yds','Rush Yds','Rec Yds','TDs','Plays'], datasets:[{label:'Player', data:[]},{label:'Pos Avg', data:[]}] }, options:{ plugins:{ legend:{ labels:{ color:getComputedStyle(document.body).getPropertyValue('--muted') } } }, scales:{ r:{ angleLines:{ color:'rgba(255,255,255,0.07)' }, grid:{ color:'rgba(255,255,255,0.07)' }, pointLabels:{ color:getComputedStyle(document.body).getPropertyValue('--muted') }, ticks:{ display:false } } } } );
-    }
-
-    function updateCharts(){
-      const filtered = currentFilteredPlayers();
-      const metric = state.metric;
-      const w0 = state.weekStart, w1 = state.weekEnd;
-      // Trend
-      const labels = Array.from({length: w1-w0+1}, (_,i)=>'W'+(w0+i));
-      const vals = labels.map((_,i)=>{
-        const week = w0 + i;
-        const xs = filtered.map(p=>p.statsByWeek[week]?.[metric]||0);
-        return state.trendAgg==='sum' ? sum(xs) : state.trendAgg==='median' ? median(xs) : avg(xs);
-      });
-      charts.trend.data.labels = labels;
-      charts.trend.data.datasets = [{ label: metricLabel(metric), data: vals, fill:false }];
-      charts.trend.update('none');
-
-      // Leaders (YTD within range)
-      const leaders = filtered.map(p=>({
-        id: p.id,
-        name: p.name,
-        team: p.team,
-        value: ytdMetric(p, metric, w0, w1)
-      })).sort(by('value','desc')).slice(0, +state.leadersCount);
-      charts.leaders.data.labels = leaders.map(x=>x.name.split(' ')[0] + ' (' + x.team + ')');
-      charts.leaders.data.datasets[0].data = leaders.map(x=>x.value);
-      charts.leaders.update('none');
-      // click -> focus player
-      $('#leadersChart').onclick = (evt)=>{
-        const p = charts.leaders.getActiveElements()[0];
-        if(!p) return; const idx = p.index; const id = leaders[idx].id; selectPlayer(id);
-      };
-
-      // Histogram
-      const xs = filtered.map(p=>ytdMetric(p, metric, w0, w1));
-      const bins = 10;
-      const maxv = Math.max(1, Math.max(...xs));
-      const minv = 0;
-      const step = (maxv-minv)/bins;
-      const counts = new Array(bins).fill(0);
-      xs.forEach(v=>{ const k = Math.min(bins-1, Math.floor((v-minv)/step)); counts[k]++; });
-      charts.dist.data.labels = Array.from({length:bins}, (_,i)=> `${Math.round(minv+i*step)}–${Math.round(minv+(i+1)*step)}`);
-      charts.dist.data.datasets[0].data = counts;
-      charts.dist.update('none');
-
-      // Radar — use selected player or top of leaders
-      const player = (selectedPlayerId && players.find(p=>p.id===selectedPlayerId)) || (leaders[0] && players.find(p=>p.id===leaders[0].id)) || null;
-      if(player){
-        radarPlayerName.textContent = `${player.name} (${player.team}, ${player.position})`;
-        const metrics = ['passYds','rushYds','recYds','tds','plays'];
-        const pVals = metrics.map(m=>ytdMetric(player, m, w0, w1));
-        const samePos = filtered.filter(p=>p.position===player.position);
-        const avgVals = metrics.map(m=> avg(samePos.map(pl=>ytdMetric(pl,m,w0,w1))) );
-        charts.radar.data.datasets[0].data = normalize(pVals);
-        charts.radar.data.datasets[1].data = normalize(avgVals);
-        charts.radar.update('none');
-      } else {
-        radarPlayerName.textContent = '(select a row)';
-        charts.radar.data.datasets[0].data = [];
-        charts.radar.data.datasets[1].data = [];
-        charts.radar.update('none');
-      }
-    }
-
-    function metricLabel(k){
-      return {passYds:'Passing Yards', rushYds:'Rushing Yards', recYds:'Receiving Yards', tds:'Touchdowns', plays:'Plays'}[k] || k;
-    }
-    function normalize(arr){
-      const maxa = Math.max(1, ...arr);
-      return arr.map(v=> v/maxa * 100);
-    }
-    function ytdMetric(p, metric, fromW=1, toW=14){
-      const ws = Object.values(p.statsByWeek).filter(w=>w.week>=fromW && w.week<=toW);
-      return Math.round(ws.reduce((a,b)=>a+(b[metric]||0),0));
-    }
-
-    // ======= Sidebar + Filters =======
-    function initSidebar(){
-      // Season (support multiple seasons if imported)
-      const seasons = uniq(players.map(p=>p.season)).sort();
-      seasonSelect.innerHTML = seasons.map(s=>`<option ${+s===+state.season?'selected':''}>${s}</option>`).join('');
-      weekStart.value = state.weekStart; weekEnd.value = state.weekEnd; weekStartLabel.textContent = state.weekStart; weekEndLabel.textContent = state.weekEnd;
-
-      // Conferences
-      confSelect.innerHTML = conferences.map(c=>`<option ${state.confs.includes(c)?'selected':''}>${c}</option>`).join('');
-      renderConfChips();
-
-      // Teams
-      renderTeamOptions();
-
-      // Positions
-      posChips.innerHTML = positions.map(p=>`<span class="chip" data-pos="${p}"><input type="checkbox" ${state.positions.has(p)?'checked':''} id="pos-${p}"> ${p}</span>`).join('');
-
-      // Metric
-      const metrics = [ ['passYds','Passing Yards'], ['rushYds','Rushing Yards'], ['recYds','Receiving Yards'], ['tds','Touchdowns'], ['plays','Plays'] ];
-      metricSelect.innerHTML = metrics.map(([k,v])=>`<option value="${k}" ${state.metric===k?'selected':''}>${v}</option>`).join('');
-
-      // Column toggles
-      renderColumnToggles();
-
-      // Sort keys
-      const sortKeys = [ ['metricYTD','Current Metric (YTD)'], ['name','Player Name'], ['team','Team'], ['conference','Conference'], ['position','Position'], ['passYds','Passing Yds (YTD)'], ['rushYds','Rushing Yds (YTD)'], ['recYds','Receiving Yds (YTD)'], ['tds','TDs (YTD)'], ['plays','Plays (YTD)'] ];
-      sortSelect.innerHTML = sortKeys.map(([k,v])=>`<option value="${k}" ${state.sortKey===k?'selected':''}>${v}</option>`).join('');
-      sortDir.value = state.sortDir;
-
-      // Visible charts
-      showTrend.checked = state.visibleCharts.trend;
-      showLeaders.checked = state.visibleCharts.leaders;
-      showDist.checked = state.visibleCharts.dist;
-      showRadar.checked = state.visibleCharts.radar;
-
-      // Leaders count & trend agg
-      trendAgg.value = state.trendAgg;
-      leadersCount.value = state.leadersCount;
-    }
-    function renderConfChips(){
-      confChips.innerHTML = state.confs.map(c=>`<span class="chip">${c} <button aria-label="Remove ${c}" data-remove-conf="${c}">✕</button></span>`).join('');
-    }
-    function renderTeamOptions(){
-      const teams = uniq(players.filter(p=>!state.confs.length || state.confs.includes(p.conference)).map(p=>p.team)).sort();
-      teamSelect.innerHTML = teams.map(t=>`<option ${state.teams.includes(t)?'selected':''}>${t}</option>`).join('');
-    }
-    function renderColumnToggles(){
-      const all = ['★','Player','Team','Conf','Pos','Pass Yds','Rush Yds','Rec Yds','TDs','Plays','Trend'];
-      columnToggles.innerHTML = all.map(c=>`<label class="chip"><input type="checkbox" ${state.columns.includes(c)?'checked':''} data-col="${c}"> ${c}</label>`).join('');
-    }
-
-    // ======= Table =======
-    const COLS = {
-      '★': (p) => `<span class="star" title="Add to watchlist" data-star="${p.id}">${state.watch.has(p.id) ? '★' : '☆'}</span>`,
-      'Player': (p)=> `<b>${p.name}</b>` ,
-      'Team': (p)=> `${p.team}` ,
-      'Conf': (p)=> `${p.conference}` ,
-      'Pos': (p)=> `${p.position}` ,
-      'Pass Yds': (p)=> fmt(ytdMetric(p,'passYds',state.weekStart,state.weekEnd)) ,
-      'Rush Yds': (p)=> fmt(ytdMetric(p,'rushYds',state.weekStart,state.weekEnd)) ,
-      'Rec Yds': (p)=> fmt(ytdMetric(p,'recYds',state.weekStart,state.weekEnd)) ,
-      'TDs': (p)=> fmt(ytdMetric(p,'tds',state.weekStart,state.weekEnd)) ,
-      'Plays': (p)=> fmt(ytdMetric(p,'plays',state.weekStart,state.weekEnd)) ,
-      'Trend': (p)=> `<canvas class="spark" data-spark="${p.id}" width="100" height="28"></canvas>`
-    };
-
-    function renderTable(){
-      // Header
-      tableHead.innerHTML = state.columns.map(c=>`<th>${c}</th>`).join('');
-
-      // Rows
-      const rows = pagedPlayers();
-      tableBody.innerHTML = rows.map(p=>`<tr data-id="${p.id}">` + state.columns.map(c=> `<td>${COLS[c](p)}</td>`).join('') + `</tr>`).join('');
-
-      // Row interactions
-      $$('tr', tableBody).forEach(tr => {
-        tr.addEventListener('click', (e) => {
-          // avoid star click capturing
-          if(e.target.closest('[data-star]')) return;
-          const id = +tr.getAttribute('data-id');
-          selectPlayer(id);
-        });
-      });
-
-      // Stars
-      $$('[data-star]').forEach(el=>{
-        el.addEventListener('click', (e)=>{
-          const id = +el.getAttribute('data-star');
-          if(state.watch.has(id)) state.watch.delete(id); else state.watch.add(id);
-          save('cfb.watch', Array.from(state.watch));
-          renderTable();
-          renderWatchlist();
-        });
-      });
-
-      // Sparklines
-      drawSparklines(rows);
-
-      // Footer / pagination
-      const total = currentFilteredPlayers(true).length;
-      rowCount.textContent = `${total} players`;
-      const pages = Math.max(1, Math.ceil(total / state.rowsPerPage));
-      state.page = clamp(state.page, 1, pages);
-      pageInfo.textContent = `Page ${state.page}/${pages}`;
-    }
-
-    function drawSparklines(rows){
-      rows.forEach(p => {
-        const canvas = document.querySelector(`canvas[data-spark="${p.id}"]`);
-        if(!canvas) return; const ctx = canvas.getContext('2d');
-        const w = canvas.width, h = canvas.height; ctx.clearRect(0,0,w,h);
-        const ws = Array.from({length: state.weekEnd - state.weekStart + 1}, (_,i)=> state.weekStart + i);
-        const vals = ws.map(wk => p.statsByWeek[wk]?.[state.metric]||0);
-        const maxv = Math.max(1, ...vals);
-        ctx.lineWidth = 1.8; ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--accent');
-        ctx.beginPath();
-        vals.forEach((v, i) => {
-          const x = (i/(vals.length-1)) * (w-6) + 3;
-          const y = h - (v/maxv)*(h-6) - 3;
-          i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
-        });
-        ctx.stroke();
-      });
-    }
-
-    function currentFilteredPlayers(skipWatch=false){
-      const txt = quickSearch.value.trim().toLowerCase();
-      const s = state;
-      const fp = players.filter(p => {
-        if(+p.season !== +s.season) return false;
-        if(s.confs.length && !s.confs.includes(p.conference)) return false;
-        if(s.teams.length && !s.teams.includes(p.team)) return false;
-        if(!s.positions.has(p.position)) return false;
-        if(!skipWatch && s.onlyWatch && !s.watch.has(p.id)) return false;
-        if(txt && !(p.name.toLowerCase().includes(txt) || p.team.toLowerCase().includes(txt))) return false;
-        return true;
-      });
-      return fp;
-    }
-
-    function enrichedPlayers(){
-      // Derive YTD columns for sort and table
-      const list = currentFilteredPlayers().map(p => {
-        const y = {
-          passYds: ytdMetric(p,'passYds',state.weekStart,state.weekEnd),
-          rushYds: ytdMetric(p,'rushYds',state.weekStart,state.weekEnd),
-          recYds:  ytdMetric(p,'recYds',state.weekStart,state.weekEnd),
-          tds:     ytdMetric(p,'tds',state.weekStart,state.weekEnd),
-          plays:   ytdMetric(p,'plays',state.weekStart,state.weekEnd)
-        };
-        return { ...p, ...y, metricYTD: y[state.metric] };
-      });
-      return list.sort((a,b)=> state.sortDir==='asc' ? (a[state.sortKey]??0)-(b[state.sortKey]??0) : (b[state.sortKey]??0)-(a[state.sortKey]??0));
-    }
-
-    function pagedPlayers(){
-      const list = enrichedPlayers();
-      const start = (state.page-1) * state.rowsPerPage;
-      return list.slice(start, start + state.rowsPerPage);
-    }
-
-    function selectPlayer(id){
-      selectedPlayerId = id; updateCharts();
-      // scroll watchlist item into view if present
-      const w = $(`.watch-item[data-id="${id}"]`); if(w) w.scrollIntoView({behavior:'smooth', block:'nearest', inline:'nearest'});
-    }
-
-    // ======= KPIs =======
-    function updateKpis(){
-      const filtered = currentFilteredPlayers();
-      const topN = filtered.map(p=>({ p, y: ytdMetric(p,'passYds',state.weekStart,state.weekEnd) })).sort(by('y')).slice(0,25).map(x=>x.p);
-      const pass = avg(topN.map(p=>ytdMetric(p,'passYds',state.weekStart,state.weekEnd)));
-      const rush = avg(filtered.sort((a,b)=>ytdMetric(b,'rushYds')-ytdMetric(a,'rushYds')).slice(0,25).map(p=>ytdMetric(p,'rushYds',state.weekStart,state.weekEnd)));
-      const rec  = avg(filtered.sort((a,b)=>ytdMetric(b,'recYds')-ytdMetric(a,'recYds')).slice(0,25).map(p=>ytdMetric(p,'recYds',state.weekStart,state.weekEnd)));
-      const tds  = avg(filtered.sort((a,b)=>ytdMetric(b,'tds')-ytdMetric(a,'tds')).slice(0,25).map(p=>ytdMetric(p,'tds',state.weekStart,state.weekEnd)));
-      kpiPassYds.textContent = Math.round(pass).toLocaleString();
-      kpiRushYds.textContent = Math.round(rush).toLocaleString();
-      kpiRecYds.textContent  = Math.round(rec).toLocaleString();
-      kpiTds.textContent     = Math.round(tds).toLocaleString();
-      // Show week-over-week delta using last two weeks average
-      const wk0 = clamp(state.weekEnd-1, state.weekStart, state.weekEnd);
-      const wk1 = state.weekEnd;
-      const pass0 = avg(filtered.map(p=>p.statsByWeek[wk0]?.passYds||0));
-      const pass1 = avg(filtered.map(p=>p.statsByWeek[wk1]?.passYds||0));
-      const rush0 = avg(filtered.map(p=>p.statsByWeek[wk0]?.rushYds||0));
-      const rush1 = avg(filtered.map(p=>p.statsByWeek[wk1]?.rushYds||0));
-      const rec0  = avg(filtered.map(p=>p.statsByWeek[wk0]?.recYds||0));
-      const rec1  = avg(filtered.map(p=>p.statsByWeek[wk1]?.recYds||0));
-      const td0   = avg(filtered.map(p=>p.statsByWeek[wk0]?.tds||0));
-      const td1   = avg(filtered.map(p=>p.statsByWeek[wk1]?.tds||0));
-      kpiPassDelta.textContent = deltaTxt(pass0, pass1);
-      kpiRushDelta.textContent = deltaTxt(rush0, rush1);
-      kpiRecDelta.textContent  = deltaTxt(rec0, rec1);
-      kpiTdsDelta.textContent  = deltaTxt(td0, td1);
-    }
-    function deltaTxt(a,b){
-      const d = (b-a); const s = d>=0?'+':''; return `${s}${Math.round(d).toLocaleString()} vs prev wk`;
-    }
-
-    // ======= Watchlist =======
-    function renderWatchlist(){
-      const el = $('#watchlist');
-      const items = players.filter(p=>state.watch.has(p.id)).slice(0, 20);
-      el.innerHTML = items.map(p=>{
-        const y = ytdMetric(p, state.metric, state.weekStart,state.weekEnd);
-        return `<div class="watch-item" data-id="${p.id}">
-          <div class="row"><div class="name">${p.name}</div><span class="muted right">${p.team} • ${p.position}</span></div>
-          <div class="row" style="gap:6px"><div class="value" style="font-weight:800">${fmt(y)}</div><span class="muted">${metricLabel(state.metric)} (YTD)</span></div>
-          <canvas class="spark" data-spark="${p.id}" width="200" height="28"></canvas>
-        </div>`
-      }).join('');
-      drawSparklines(items);
-    }
-
-    // ======= Export =======
-    function exportCsv(){
-      const rows = enrichedPlayers();
-      const headers = state.columns;
-      const csvRows = [headers.join(',')];
-      rows.forEach(p=>{
-        const vals = headers.map(h=>{
-          if(h==='★') return state.watch.has(p.id)?'1':'0';
-          if(h==='Player') return '"'+p.name+'"';
-          if(h==='Team') return '"'+p.team+'"';
-          if(h==='Conf') return '"'+p.conference+'"';
-          if(h==='Pos') return p.position;
-          if(h==='Pass Yds') return ytdMetric(p,'passYds',state.weekStart,state.weekEnd);
-          if(h==='Rush Yds') return ytdMetric(p,'rushYds',state.weekStart,state.weekEnd);
-          if(h==='Rec Yds') return ytdMetric(p,'recYds',state.weekStart,state.weekEnd);
-          if(h==='TDs') return ytdMetric(p,'tds',state.weekStart,state.weekEnd);
-          if(h==='Plays') return ytdMetric(p,'plays',state.weekStart,state.weekEnd);
-          if(h==='Trend') return '—';
-          return '';
-        });
-        csvRows.push(vals.join(','));
-      });
-      const blob = new Blob([csvRows.join('\n')], {type:'text/csv'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'players.csv'; a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function downloadChartPng(which){
-      const map = { trend:'trend', leaders:'leaders', dist:'dist', radar:'radar' };
-      const ch = charts[map[which]]; if(!ch) return;
-      const url = ch.toBase64Image();
-      const a = document.createElement('a'); a.href=url; a.download = `${which}.png`; a.click();
-    }
-
-    // ======= Real‑time (demo) =======
-    let demoTimer = null; let socket = null;
-    function startDemo(){
-      if(demoTimer) return; demoTimer = setInterval(()=>{
-        if(!state.live) return;
-        // randomly pick 6 players and bump current week metric
-        const w = clamp(state.weekEnd, 1, 14);
-        for(let i=0;i<6;i++){
-          const p = players[Math.floor(rng()*players.length)];
-          const s = p.statsByWeek[w];
-          if(!s) continue; const bump = Math.round(rng()*40);
-          s[state.metric] = Math.max(0, (s[state.metric]||0) + bump);
-          s.tds += (rng()>0.85 ? 1 : 0);
-          s.plays += Math.round(1 + rng()*3);
-        }
-        lastUpdated.textContent = 'Last update: ' + nowTs();
-        updateKpis(); updateCharts(); renderTable(); renderWatchlist();
-      }, 2000);
-    }
-    function stopDemo(){ if(demoTimer) { clearInterval(demoTimer); demoTimer=null; } }
-
-    function connectSocket(){
-      try {
-        if(socket) { socket.close(); socket=null; }
-        const url = socketUrl.value.trim(); if(!url) return alert('Enter a WebSocket URL');
-        socket = new WebSocket(url);
-        socket.addEventListener('open', () => { statusBadge.textContent = 'Live Socket Connected'; statusBadge.classList.add('pill'); });
-        socket.addEventListener('message', (ev) => {
-          try {
-            const msg = JSON.parse(ev.data);
-            if(msg.type === 'stat'){
-              const p = players.find(x=>x.id === msg.playerId); if(!p) return;
-              const w = clamp(+msg.week||state.weekEnd, 1, 14);
-              const s = p.statsByWeek[w]; if(!s) return;
-              if(['passYds','rushYds','recYds','tds','plays'].includes(msg.metric)){
-                s[msg.metric] = +msg.value;
-                lastUpdated.textContent = 'Last update: ' + nowTs();
-                updateKpis(); updateCharts(); renderTable(); renderWatchlist();
-              }
-            }
-          } catch(err){ console.warn('Bad message', err); }
-        });
-        socket.addEventListener('close', () => { statusBadge.textContent = 'Socket Disconnected'; });
-        if(socketToken.value.trim()) socket.addEventListener('open', ()=> socket.send(JSON.stringify({type:'auth', token: socketToken.value.trim()})));
-      } catch(err){ alert('Socket error: ' + err.message); }
-    }
-
-    // ======= Import JSON =======
-    btnImport.addEventListener('click', ()=> fileInput.click());
-    fileInput.addEventListener('change', (ev)=>{
-      const file = ev.target.files[0]; if(!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          const json = JSON.parse(reader.result);
-          // Expect format: [{id?, name, team, conference, position, season, statsByWeek: {1:{passYds,...}, ...}}]
-          if(!Array.isArray(json)) throw new Error('Expected an array of players');
-          // Normalize ids
-          let nextId = 1;
-          players = json.map(p=>({
-            id: p.id || nextId++,
-            name: p.name, team: p.team, conference: p.conference, position: p.position, season: +p.season || state.season,
-            statsByWeek: p.statsByWeek
-          }));
-          selectedPlayerId = null;
-          initSidebar();
-          updateAll();
-          alert('Imported ' + players.length + ' players');
-        } catch(err){ alert('Invalid JSON: ' + err.message); }
-      };
-      reader.readAsText(file);
-    });
-
-    // ======= Event Wiring =======
-    function wire(){
-      // Theme
-      themeSwitch.addEventListener('click', ()=>{
-        themeSwitch.classList.toggle('on');
-        document.body.classList.toggle('light');
-        state.theme = document.body.classList.contains('light') ? 'light' : 'dark';
-        save('cfb.theme', state.theme); save('cfb.state', state);
-        // Rebuild charts to adapt label colors
-        charts.trend.destroy(); charts.leaders.destroy(); charts.dist.destroy(); charts.radar.destroy();
-        buildCharts(); updateCharts();
-      });
-      if(state.theme==='light') themeSwitch.classList.add('on');
-
-      // Live
-      liveSwitch.addEventListener('click', ()=>{
-        liveSwitch.classList.toggle('on'); state.live = liveSwitch.classList.contains('on');
-        statusBadge.textContent = state.live ? 'Demo Data • Updates every 2s' : 'Paused';
-        save('cfb.state', state);
-      });
-
-      // Filters
-      seasonSelect.addEventListener('change', ()=>{ state.season = +seasonSelect.value; state.page=1; updateAll(); });
-      weekStart.addEventListener('input', ()=>{ state.weekStart = Math.min(+weekStart.value, +weekEnd.value); weekStart.value = state.weekStart; weekStartLabel.textContent = state.weekStart; updateAll(); });
-      weekEnd.addEventListener('input', ()=>{ state.weekEnd = Math.max(+weekEnd.value, +weekStart.value); weekEnd.value = state.weekEnd; weekEndLabel.textContent = state.weekEnd; updateAll(); });
-      confSelect.addEventListener('change', ()=>{ state.confs = Array.from(confSelect.selectedOptions).map(o=>o.value); renderConfChips(); renderTeamOptions(); state.page=1; updateAll(); });
-      confChips.addEventListener('click', (e)=>{ const c = e.target.getAttribute('data-remove-conf'); if(!c) return; state.confs = state.confs.filter(x=>x!==c); confSelect.querySelectorAll('option').forEach(o=>o.selected = state.confs.includes(o.value)); renderConfChips(); renderTeamOptions(); updateAll(); });
-      teamSelect.addEventListener('change', ()=>{ state.teams = Array.from(teamSelect.selectedOptions).map(o=>o.value); state.page=1; updateAll(); });
-      posChips.addEventListener('change', (e)=>{ const el = e.target; if(el && el.id && el.id.startsWith('pos-')){ const p = el.id.replace('pos-',''); if(el.checked) state.positions.add(p); else state.positions.delete(p); state.page=1; updateAll(); }});
-      metricSelect.addEventListener('change', ()=>{ state.metric = metricSelect.value; updateAll(); });
-      quickSearch.addEventListener('input', ()=>{ state.page=1; updateAll(false); });
-
-      // Visible charts
-      showTrend.addEventListener('change', ()=>{ state.visibleCharts.trend = showTrend.checked; displayCharts(); save('cfb.state', state); });
-      showLeaders.addEventListener('change', ()=>{ state.visibleCharts.leaders = showLeaders.checked; displayCharts(); save('cfb.state', state); });
-      showDist.addEventListener('change', ()=>{ state.visibleCharts.dist = showDist.checked; displayCharts(); save('cfb.state', state); });
-      showRadar.addEventListener('change', ()=>{ state.visibleCharts.radar = showRadar.checked; displayCharts(); save('cfb.state', state); });
-
-      // Chart toolbars
-      trendAgg.addEventListener('change', ()=>{ state.trendAgg = trendAgg.value; updateCharts(); save('cfb.state', state); });
-      leadersCount.addEventListener('change', ()=>{ state.leadersCount = +leadersCount.value; updateCharts(); save('cfb.state', state); });
-      $$('[data-dl]').forEach(btn => btn.addEventListener('click', ()=> downloadChartPng(btn.getAttribute('data-dl')) ));
-
-      // Table
-      prevPage.addEventListener('click', ()=>{ state.page = Math.max(1, state.page-1); renderTable(); });
-      nextPage.addEventListener('click', ()=>{ const total=currentFilteredPlayers(true).length; const pages=Math.max(1, Math.ceil(total/state.rowsPerPage)); state.page = Math.min(pages, state.page+1); renderTable(); });
-      sortSelect.addEventListener('change', ()=>{ state.sortKey = sortSelect.value; state.page=1; renderTable(); save('cfb.state', state); });
-      sortDir.addEventListener('change', ()=>{ state.sortDir = sortDir.value; state.page=1; renderTable(); save('cfb.state', state); });
-      rowsPerPage.addEventListener('change', ()=>{ state.rowsPerPage = +rowsPerPage.value; state.page=1; renderTable(); save('cfb.state', state); });
-      onlyWatch.addEventListener('change', ()=>{ state.onlyWatch = onlyWatch.checked; state.page=1; renderTable(); save('cfb.state', state); });
-      $('#btnExportCsv').addEventListener('click', exportCsv);
-      $('#btnClearWatch').addEventListener('click', ()=>{ state.watch.clear(); save('cfb.watch', []); renderWatchlist(); renderTable(); });
-
-      // Columns
-      columnToggles.addEventListener('change', (e)=>{ const col = e.target.getAttribute('data-col'); if(!col) return; if(e.target.checked){ if(!state.columns.includes(col)) state.columns.push(col); } else { state.columns = state.columns.filter(c=>c!==col); } save('cfb.state', state); renderTable(); });
-
-      // Reset & Save View
-      btnReset.addEventListener('click', ()=>{ Object.assign(state, { weekStart:1, weekEnd:14, confs:[], teams:[], positions: new Set(positions), metric:'passYds', trendAgg:'avg', leadersCount:10, page:1, onlyWatch:false, sortKey:'metricYTD', sortDir:'desc' }); initSidebar(); updateAll(); });
-      btnSaveView.addEventListener('click', ()=>{ const name = prompt('Name this view'); if(!name) return; const view = JSON.parse(JSON.stringify({ ...state, positions: Array.from(state.positions), watch: Array.from(state.watch) })); state.views.push({name, view}); save('cfb.views', state.views); alert('Saved view: '+name); });
-
-      // API / Socket
-      btnConnect.addEventListener('click', ()=> apiModal.showModal());
-      btnSocketConnect.addEventListener('click', (e)=>{ e.preventDefault(); connectSocket(); apiModal.close(); });
-    }
-
-    function displayCharts(){
-      $('#chartTrendCard').classList.toggle('hidden', !state.visibleCharts.trend);
-      $('#chartLeadersCard').classList.toggle('hidden', !state.visibleCharts.leaders);
-      $('#chartDistCard').classList.toggle('hidden', !state.visibleCharts.dist);
-      $('#chartRadarCard').classList.toggle('hidden', !state.visibleCharts.radar);
-    }
-
-    function updateAll(updateChartsToo=true){
-      save('cfb.state', { ...state, positions: Array.from(state.positions) });
-      updateKpis();
-      if(updateChartsToo) updateCharts();
-      renderTable();
-      renderWatchlist();
-      lastUpdated.textContent = 'Last update: ' + nowTs();
-    }
-
-    // ======= Boot =======
-    function boot(){
-      // Initialize UI
-      initSidebar();
-      buildCharts();
-      wire();
-      displayCharts();
-      updateAll();
-      // Live demo ticker
-      startDemo();
-    }
-
-    boot();
-  })();
-  </script>
+  <!-- App -->
+  <script defer src="app.js"></script>
 </body>
 </html>
+
