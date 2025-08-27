@@ -8,7 +8,18 @@
   // ---------- Config ----------
   const APP_CONFIG = JSON.parse(document.getElementById("app-config").textContent);
   const API_BASE = "https://api.collegefootballdata.com";
-  const API_KEY = APP_CONFIG?.data?.apiKey || "";
+  let API_KEY = "";
+
+  async function loadApiKey() {
+    try {
+      const res = await fetch("/api-key");
+      if (!res.ok) throw new Error("Failed to load API key");
+      const data = await res.json();
+      API_KEY = data.key || "";
+    } catch (err) {
+      console.error("Unable to retrieve API key", err);
+    }
+  }
   const POWER_CONFS = APP_CONFIG?.conferences || ["ACC", "Big Ten", "Big 12", "SEC", "Pac-12"];
 
   // ---------- DOM helpers ----------
@@ -243,6 +254,7 @@
     try {
       setStatus(true);
       wireEvents();
+      await loadApiKey();
       await populateSeasons();
       await determineCurrentWeek();
       await populateConferences();
