@@ -198,7 +198,17 @@
     const url = `${API_BASE}${path}${Object.keys(params).length ? "?" + qsBuild(params) : ""}`;
     const cacheKey = `CFBD:${url}`;
     const cached = STATE.cache[cacheKey];
-    if (useCache && cached) return cached;
+    const ttlHours = APP_CONFIG?.data?.cache?.ttlHours;
+    const ttlMs = ttlHours > 0 ? ttlHours * 60 * 60 * 1000 : null;
+    const now = Date.now();
+    if (useCache && cached) {
+      const { data, ts } = cached;
+      if (!ttlMs || (ts && now - ts < ttlMs)) {
+        return data;
+      }
+      delete STATE.cache[cacheKey];
+      saveLS(SKEY.cache, STATE.cache);
+    }
 
     const headers = {
       "Content-Type": "application/json",
@@ -222,7 +232,7 @@
     return withThrottle(async () => {
       const data = await attempt(1);
       // cache
-      STATE.cache[cacheKey] = data;
+      STATE.cache[cacheKey] = { ts: Date.now(), data };
       saveLS(SKEY.cache, STATE.cache);
       return data;
     });
