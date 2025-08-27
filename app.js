@@ -396,14 +396,30 @@
     const years = [];
     for (let y = currentYear; y >= currentYear - 10; y--) years.push(y);
 
-    seasonSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join("");
+    // Populate season options safely
+    seasonSelect.replaceChildren(
+      ...years.map(y => {
+        const opt = el("option");
+        opt.value = String(y);
+        opt.textContent = String(y);
+        return opt;
+      })
+    );
     // default season per config
     const defaultSeason = currentYear;
     seasonSelect.value = defaultSeason;
     STATE.season = defaultSeason;
 
     // Weeks: 1..15 default; will refine if API returns
-    weekSelect.innerHTML = Array.from({ length: 15 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("");
+    weekSelect.replaceChildren(
+      ...Array.from({ length: 15 }, (_, i) => {
+        const opt = el("option");
+        const val = String(i + 1);
+        opt.value = val;
+        opt.textContent = val;
+        return opt;
+      })
+    );
   }
 
   async function determineCurrentWeek() {
@@ -423,9 +439,18 @@
   }
 
   async function populateConferences() {
-    const opts = [`<option value="">All Power 5</option>`]
-      .concat(POWER_CONFS.map(c => `<option value="${c}">${c}</option>`));
-    confSelect.innerHTML = opts.join("");
+    // Build conference options without using innerHTML
+    confSelect.replaceChildren();
+    const defaultOpt = el("option");
+    defaultOpt.value = "";
+    defaultOpt.textContent = "All Power 5";
+    confSelect.appendChild(defaultOpt);
+    POWER_CONFS.forEach(c => {
+      const opt = el("option");
+      opt.value = c;
+      opt.textContent = c;
+      confSelect.appendChild(opt);
+    });
     confSelect.value = "";
     STATE.conference = "";
   }
@@ -447,9 +472,18 @@
       console.warn("teams", e);
     }
     STATE.teams = dedupeBy(teams, t => `${t.school}|${t.conference}`);
-    const opts = [`<option value="">All Teams</option>`]
-      .concat(STATE.teams.map(t => `<option value="${t.school}">${t.school}</option>`));
-    teamSelect.innerHTML = opts.join("");
+    // Populate team options using DOM methods to avoid unsafe HTML
+    teamSelect.replaceChildren();
+    const defaultOpt = el("option");
+    defaultOpt.value = "";
+    defaultOpt.textContent = "All Teams";
+    teamSelect.appendChild(defaultOpt);
+    STATE.teams.forEach(t => {
+      const opt = el("option");
+      opt.value = t.school;
+      opt.textContent = t.school;
+      teamSelect.appendChild(opt);
+    });
     if (resetTeam) {
       STATE.team = "";
       teamSelect.value = "";
@@ -747,7 +781,7 @@
     if (STATE.page > totalPages) STATE.page = totalPages;
 
     // Render
-    playersTbody.innerHTML = "";
+    playersTbody.replaceChildren();
     const tpl = qs("#playerRowTpl");
     for (const r of pageRows) {
       const tr = tpl.content.firstElementChild.cloneNode(true);
@@ -794,7 +828,7 @@
   }
 
   function renderFavoritesUI() {
-    favoritesList.innerHTML = "";
+    favoritesList.replaceChildren();
     const map = new Map(STATE.players.map(p => [p.id, p]));
     for (const id of STATE.favorites) {
       const p = map.get(id);
@@ -802,7 +836,14 @@
       if (!p) {
         li.textContent = id;
       } else {
-        li.innerHTML = `<strong>${p.name}</strong> — ${p.team} • ${p.pos}<br><span class="muted">Proj: ${fmt(p.proj)} • Boom: ${pct(p.boom)}</span>`;
+        const nameEl = el("strong");
+        nameEl.textContent = p.name;
+        li.appendChild(nameEl);
+        li.appendChild(document.createTextNode(` — ${p.team} • ${p.pos}`));
+        li.appendChild(el("br"));
+        const span = el("span", "muted");
+        span.textContent = `Proj: ${fmt(p.proj)} • Boom: ${pct(p.boom)}`;
+        li.appendChild(span);
       }
       favoritesList.appendChild(li);
     }
@@ -934,12 +975,19 @@
     rows.sort((a, b) => (b.boom - a.boom));
     const top = rows.slice(0, n);
 
-    boomList.innerHTML = "";
+    boomList.replaceChildren();
     top.forEach((p, i) => {
       const li = el("li");
-      li.innerHTML = `<strong>#${i + 1} ${p.name}</strong> — ${p.team} • ${p.pos}
-        <span class="muted">vs ${p.opponent || "TBD"} (${p.homeAway || "—"})</span>
-        <div class="muted">Proj: ${fmt(p.proj)} • Boom: ${pct(p.boom)} • Usage: ${pct(p.usage)}</div>`;
+      const strong = el("strong");
+      strong.textContent = `#${i + 1} ${p.name}`;
+      li.appendChild(strong);
+      li.appendChild(document.createTextNode(` — ${p.team} • ${p.pos} `));
+      const span = el("span", "muted");
+      span.textContent = `vs ${p.opponent || "TBD"} (${p.homeAway || "—"})`;
+      li.appendChild(span);
+      const div = el("div", "muted");
+      div.textContent = `Proj: ${fmt(p.proj)} • Boom: ${pct(p.boom)} • Usage: ${pct(p.usage)}`;
+      li.appendChild(div);
       boomList.appendChild(li);
     });
     boomLoading.classList.add("hidden");
@@ -948,7 +996,7 @@
   // ---------- Compare ----------
   function renderCompareUI() {
     compareBtn.querySelector("#compareCount").textContent = String(STATE.compare.length);
-    compareSlots.innerHTML = "";
+    compareSlots.replaceChildren();
     const map = new Map(STATE.players.map(p => [p.id, p]));
     for (const id of STATE.compare) {
       const p = map.get(id);
